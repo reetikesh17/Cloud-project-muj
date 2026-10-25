@@ -1,0 +1,28 @@
+services:
+  library-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: library-management-system:latest
+    container_name: library-management-system
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - HOST=0.0.0.0
+      - DATA_DIR=/usr/src/app/data_storage
+    volumes:
+      # Named volume to persist library books across container restarts
+      - library_storage:/usr/src/app/data_storage
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:3000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+volumes:
+  library_storage:
+    driver: local

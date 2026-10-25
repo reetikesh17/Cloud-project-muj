@@ -1,0 +1,74 @@
+[
+  {
+    "id": "b101",
+    "title": "Clean Code: A Handbook of Agile Software Craftsmanship",
+    "author": "Robert C. Martin",
+    "isbn": "978-0132350884",
+    "genre": "Software Engineering",
+    "publishedYear": 2008,
+    "totalCopies": 5,
+    "availableCopies": 3,
+    "description": "A handbook of agile craftsmanship focusing on writing clean, readable, and maintainable code.",
+    "createdAt": "2026-01-15T09:00:00.000Z"
+  },
+  {
+    "id": "b102",
+    "title": "Designing Data-Intensive Applications",
+    "author": "Martin Kleppmann",
+    "isbn": "978-1449373320",
+    "genre": "Distributed Systems",
+    "publishedYear": 2017,
+    "totalCopies": 4,
+    "availableCopies": 4,
+    "description": "The definitive guide to the architecture and principles of reliable, scalable, and maintainable data systems.",
+    "createdAt": "2026-01-20T10:30:00.000Z"
+  },
+  {
+    "id": "b103",
+    "title": "The Pragmatic Programmer: Your Journey To Mastery",
+    "author": "David Thomas, Andrew Hunt",
+    "isbn": "978-0135957059",
+    "genre": "Software Engineering",
+    "publishedYear": 2019,
+    "totalCopies": 6,
+    "availableCopies": 2,
+    "description": "Timeless advice for modern software craftsmanship, career growth, and pragmatic engineering practices.",
+    "createdAt": "2026-02-01T11:15:00.000Z"
+  },
+  {
+    "id": "b104",
+    "title": "Site Reliability Engineering: How Google Runs Production Systems",
+    "author": "Betsy Beyer, Chris Jones, Jennifer Petoff, Niall Murphy",
+    "isbn": "978-1491929124",
+    "genre": "DevOps & Cloud",
+    "publishedYear": 2016,
+    "totalCopies": 3,
+    "availableCopies": 1,
+    "description": "Insights and practices from Google on building, deploying, monitoring, and maintaining scalable production services.",
+    "createdAt": "2026-02-10T14:45:00.000Z"
+  },
+  {
+    "id": "b105",
+    "title": "Docker in Action, Second Edition",
+    "author": "Jeff Nickoloff, Stephen Kuenzli",
+    "isbn": "978-1617294761",
+    "genre": "DevOps & Cloud",
+    "publishedYear": 2019,
+    "totalCopies": 4,
+    "availableCopies": 4,
+    "description": "Hands-on guide to container packaging, multi-container orchestration, security, and production deployments.",
+    "createdAt": "2026-03-05T08:20:00.000Z"
+  },
+  {
+    "id": "b106",
+    "title": "Continuous Delivery: Reliable Software Releases",
+    "author": "Jez Humble, David Farley",
+    "isbn": "978-0321601919",
+    "genre": "CI/CD & DevOps",
+    "publishedYear": 2010,
+    "totalCopies": 3,
+    "availableCopies": 2,
+    "description": "The foundational blueprint for automated build pipelines, comprehensive testing, and low-risk releases.",
+    "createdAt": "2026-03-12T16:00:00.000Z"
+  }
+]

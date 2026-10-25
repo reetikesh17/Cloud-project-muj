@@ -1,0 +1,39 @@
+{
+  "name": "containerized-library-system",
+  "version": "1.0.0",
+  "description": "Containerized Library Management System with automated CI/CD pipeline",
+  "main": "src/server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node src/server.js",
+    "clean-port": "powershell -NoProfile -Command \"Get-NetTCPConnection -LocalPort 3000 -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue }\"",
+    "test": "node --test tests/**/*.test.js",
+    "test:coverage": "node --test --experimental-test-coverage tests/**/*.test.js",
+    "docker:build": "docker build -t library-system:latest .",
+    "docker:run": "docker run -p 3000:3000 --name library-app library-system:latest",
+    "docker:compose": "docker-compose up --build"
+  },
+  "keywords": [
+    "library-management",
+    "docker",
+    "ci-cd",
+    "github-actions",
+    "containerization",
+    "express",
+    "devops"
+  ],
+  "author": "Antigravity Pair Programmer",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.21.2",
+    "cors": "^2.8.5",
+    "morgan": "^1.10.0"
+  },
+  "devDependencies": {
+    "supertest": "^7.0.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

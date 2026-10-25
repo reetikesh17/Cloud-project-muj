@@ -1,0 +1,178 @@
+name: CI/CD Pipeline - Test, Build, Containerize & Deploy
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # ============================================================================
+  # Stage 1: Quality Assurance & Automated Testing
+  # ============================================================================
+  test:
+    name: Run Unit & API Test Suite
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [20.x, 22.x]
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Execute Automated Tests
+        run: npm test
+
+  # ============================================================================
+  # Stage 2: Docker Build & Container Health Smoke Test
+  # ============================================================================
+  build-container:
+    name: Build & Smoke Test Docker Image
+    needs: test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Local Test Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          load: true
+          tags: library-management-system:test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Start Container for Smoke Verification
+        run: |
+          docker run -d --name smoke-test-app -p 3000:3000 library-management-system:test
+          echo "Waiting 6 seconds for container initialization..."
+          sleep 6
+
+      - name: Validate Container Health Endpoint
+        run: |
+          echo "Pinging http://localhost:3000/health..."
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/health)
+          if [ "$STATUS" -ne 200 ]; then
+            echo "Health check failed with status $STATUS"
+            docker logs smoke-test-app
+            exit 1
+          fi
+          echo "Health check passed with status 200!"
+          curl -s http://localhost:3000/health | jq .
+
+      - name: Cleanup Test Container
+        if: always()
+        run: docker rm -f smoke-test-app || true
+
+  # ============================================================================
+  # Stage 3: Package & Publish to Container Registry (GHCR)
+  # ============================================================================
+  publish:
+    name: Publish Container Image to GHCR
+    needs: build-container
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry (GHCR)
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract Docker Metadata (Tags & Labels)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=latest
+            type=sha,format=short
+            type=ref,event=branch
+
+      - name: Build & Push Image to Registry
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # ============================================================================
+  # Stage 4: Continuous Deployment (CD)
+  # ============================================================================
+  deploy:
+    name: Automated Deployment
+    needs: publish
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Trigger Webhook Deployment (Optional)
+        if: env.DEPLOY_WEBHOOK_URL != ''
+        env:
+          DEPLOY_WEBHOOK_URL: ${{ secrets.DEPLOY_WEBHOOK_URL }}
+        run: |
+          echo "Triggering automated deployment webhook..."
+          curl -X POST -s -f "$DEPLOY_WEBHOOK_URL"
+          echo "Deployment webhook triggered successfully."
+
+      - name: Deploy via SSH (Optional VPS / Docker Host)
+        if: env.SSH_HOST != '' && env.SSH_KEY != ''
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_KEY: ${{ secrets.SSH_KEY }}
+        run: |
+          echo "Deploying via SSH to remote server: $SSH_HOST"
+          # Example SSH deployment commands:
+          # ssh -o StrictHostKeyChecking=no "$SSH_USER@$SSH_HOST" '
+          #   docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest &&
+          #   docker compose up -d --remove-orphans
+          # '
+
+      - name: Continuous Deployment Status Report
+        run: |
+          echo "=========================================================="
+          echo "🎉 Automated Continuous Deployment completed successfully!"
+          echo "Registry Image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest"
+          echo "Commit SHA:     ${{ github.sha }}"
+          echo "Branch:         ${{ github.ref_name }}"
+          echo "Timestamp:      $(date -u +"%Y-%m-%d %H:%M:%SZ")"
+          echo "=========================================================="

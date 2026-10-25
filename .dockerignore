@@ -1,0 +1,16 @@
+node_modules
+npm-debug.log
+.git
+.gitignore
+.github
+tests
+coverage
+.nyc_output
+data_storage
+*.md
+.DS_Store
+Thumbs.db
+.vscode
+.idea
+Dockerfile*
+docker-compose*.yml
